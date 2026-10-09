@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Kỷ Luật & Tích Điểm - Luyện Thi 2027</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary);
+        }
+
+        .stat-card.streak { border-color: var(--success); }
+        .stat-card.debt { border-color: var(--danger); }
+        .stat-card.penalty { border-color: var(--warning); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .section-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], input[type="number"] {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            min-width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            gap: 10px;
+        }
+
+        .task-item:last-child { border-bottom: none; }
+
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .task-info.completed {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-check { background: var(--success); }
+        .btn-fail { background: var(--danger); }
+        .btn-delete { background: #64748b; }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .penalty-box {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .penalty-list {
+            margin-top: 10px;
+            list-style-type: square;
+            padding-left: 20px;
+            color: #c2410c;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>QUẢN LÝ KỶ LUẬT & TÍCH ĐIỂM CÁ NHÂN</h1>
+        <p>Mục tiêu: Đạt kết quả cao trong các kỳ thi A01, TOEFL iBT, ĐGNL VACT & QDA</p>
+    </header>
+
+    <!-- Thống kê điểm danh & Hình phạt -->
+    <div class="stats-grid">
+        <div class="stat-card streak">
+            <div>Chuỗi hoàn thành</div>
+            <div class="stat-value" id="streak-count" style="color: var(--success);">0 ngày</div>
+        </div>
+        <div class="stat-card debt">
+            <div>Nhiệm vụ Nợ (Cần Bù)</div>
+            <div class="stat-value" id="debt-count" style="color: var(--danger);">0</div>
+        </div>
+        <div class="stat-card penalty">
+            <div>Tiền phạt tích lũy</div>
+            <div class="stat-value" id="penalty-amount" style="color: var(--warning);">0 VNĐ</div>
+        </div>
+    </div>
+
+    <!-- Thêm nhiệm vụ mới -->
+    <div class="section-card">
+        <h3>Thêm nhiệm vụ lịch trình mới</h3>
+        <br>
+        <div class="form-group">
+            <input type="text" id="task-input" placeholder="Ví dụ: Giải 1 đề Toán A01, Học 20 từ vựng TOEFL, Luyện 15 câu ĐGNL...">
+            <input type="number" id="penalty-input" placeholder="Phạt nếu bỏ qua (VNĐ)" value="20000" style="max-width: 180px;">
+            <button onclick="addTask()">Thêm nhiệm vụ</button>
+        </div>
+    </div>
+
+    <!-- Danh sách nhiệm vụ hằng ngày -->
+    <div class="section-card">
+        <h3>Lịch trình nhiệm vụ hôm nay</h3>
+        <div id="task-list" style="margin-top: 15px;">
+            <!-- Nhiệm vụ sẽ hiển thị ở đây -->
+        </div>
+    </div>
+
+    <!-- Bảng Học Bù & Quy Tắc Kỷ Luật -->
+    <div class="section-card">
+        <h3>Góc Kỷ Luật & Học Bù</h3>
+        <div class="penalty-box">
+            <strong>Quy tắc bù & phạt:</strong>
+            <ul class="penalty-list">
+                <li>Bấm <strong>"Hoàn thành"</strong>: Tăng chuỗi kỷ luật liên tục hằng ngày.</li>
+                <li>Bấm <strong>"Bỏ qua (Phạt)"</strong>: Nhiệm vụ sẽ biến thành thẻ <strong>Nợ</strong> và tự động cộng tiền phạt tương ứng.</li>
+                <li><strong>Cách xóa thẻ Nợ:</strong> Bạn tận dụng ca rảnh chiều Thứ 4 hoặc cuối tuần (Thứ 7 & Chủ Nhật) để học bù, sau đó nhấn <strong>"Làm Bù"</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('my_tasks')) || [];
+        let stats = JSON.parse(localStorage.getItem('my_stats')) || {
+            streak: 0,
+            debt: 0,
+            penalty: 0,
+            lastCompletedDate: null
+        };
+
+        function saveData() {
+            localStorage.setItem('my_tasks', JSON.stringify(tasks));
+            localStorage.setItem('my_stats', JSON.stringify(stats));
+            renderUI();
+        }
+
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const penaltyInput = document.getElementById('penalty-input');
+            const text = input.value.trim();
+            const penalty = parseInt(penaltyInput.value) || 0;
+
+            if (text === '') return alert('Vui lòng nhập tên nhiệm vụ!');
+
+            tasks.push({
+                id: Date.now(),
+                text: text,
+                penalty: penalty,
+                status: 'pending'
+            });
+
+            input.value = '';
+            saveData();
+        }
+
+        function completeTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.status = 'done';
+                checkStreak();
+                saveData();
+            }
+        }
+
+        function failTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task && task.status !== 'failed') {
+                task.status = 'failed';
+                stats.debt += 1;
+                stats.penalty += task.penalty;
+                stats.streak = 0;
+                saveData();
+            }
+        }
+
+        function compensateTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task && task.status === 'failed') {
+                task.status = 'compensated';
+                stats.debt = Math.max(0, stats.debt - 1);
+                saveData();
+            }
+        }
+
+        function deleteTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task && task.status === 'failed') {
+                stats.debt = Math.max(0, stats.debt - 1);
+            }
+            tasks = tasks.filter(t => t.id !== id);
+            saveData();
+        }
+
+        function checkStreak() {
+            const today = new Date().toDateString();
+            if (stats.lastCompletedDate !== today) {
+                stats.streak += 1;
+                stats.lastCompletedDate = today;
+            }
+        }
+
+        function renderUI() {
+            document.getElementById('streak-count').innerText = stats.streak + ' ngày';
+            document.getElementById('debt-count').innerText = stats.debt;
+            document.getElementById('penalty-amount').innerText = stats.penalty.toLocaleString('vi-VN') + ' VNĐ';
+
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p style="color: #94a3b8; text-align: center;">Chưa có nhiệm vụ nào. Hãy thêm ở ô phía trên!</p>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = 'task-item';
+
+                let statusBadge = '';
+                let actionButtons = '';
+
+                if (task.status === 'pending') {
+                    statusBadge = `<span class="badge">Đang chờ</span>`;
+                    actionButtons = `
+                        <button class="btn-check" onclick="completeTask(${task.id})">Hoàn thành</button>
+                        <button class="btn-fail" onclick="failTask(${task.id})">Bỏ qua (Phạt)</button>
+                    `;
+                } else if (task.status === 'done') {
+                    statusBadge = `<span class="badge" style="background:#dcfce7; color:#15803d;">Đã xong</span>`;
+                    actionButtons = `<button class="btn-delete" onclick="deleteTask(${task.id})">Xóa</button>`;
+                } else if (task.status === 'failed') {
+                    statusBadge = `<span class="badge" style="background:#fee2e2; color:#b91c1c;">Nợ (Phạt ${task.penalty.toLocaleString()}đ)</span>`;
+                    actionButtons = `
+                        <button class="btn-check" onclick="compensateTask(${task.id})">Làm Bù</button>
+                        <button class="btn-delete" onclick="deleteTask(${task.id})">Xóa</button>
+                    `;
+                } else if (task.status === 'compensated') {
+                    statusBadge = `<span class="badge" style="background:#e0f2fe; color:#0369a1;">Đã Bù Xong</span>`;
+                    actionButtons = `<button class="btn-delete" onclick="deleteTask(${task.id})">Xóa</button>`;
+                }
+
+                item.innerHTML = `
+                    <div class="task-info ${task.status === 'done' || task.status === 'compensated' ? 'completed' : ''}">
+                        <strong>${task.text}</strong>
+                        ${statusBadge}
+                    </div>
+                    <div class="task-actions">
+                        ${actionButtons}
+                    </div>
+                `;
+
+                taskList.appendChild(item);
+            });
+        }
+
+        renderUI();
+    </script>
+</body>
+</html>
